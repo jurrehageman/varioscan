@@ -2,11 +2,17 @@
 title: "varioscan analysis"
 author: "Jurre Hageman"
 date: '2020-02-21'
-version: '2021-02-16'
+version: '2021-02-17'
 output:
   html_document: default
   word_document: default
 ---
+
+## Deafault plate setup
+
+A default plate setup is as ahown below:
+
+![Plate Setup](./pics/plate_setup.png)
 
 ## User Settings
 
@@ -56,8 +62,8 @@ linecolors <- c("#FF3633", "#FF8933", "#FCFF33", "#62FF33", "#33FFEB", "#33A7FF"
 
 ## Imports
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+#knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(Rmisc)
 ```
@@ -76,8 +82,9 @@ group3 <- c('3_1', '3_2', '3_3', '3_c')
 
 ## Loading the data
 
+
 ```{r message=FALSE, warning=False}
-df <- read_csv2(filepath, 
+df <- read_csv2(filepath,
                 col_types = cols(row = 'c', .default = col_double()),
                 col_names = columns) %>% #Using col_names also removes the empty columns
   slice(-1:-2) #drop the first two rows
@@ -85,8 +92,9 @@ df <- read_csv2(filepath,
 skip <- 14 #each time, 14 rows of plate info that will be skipped
 collect <- 8 #there are 8 rows of OD data that I will keep
 reps <- nrow(df) %/% (skip + collect) #number of repetitions
-index <- rep(0:(reps - 1), each = collect) * (skip + collect) + (1 : collect) + skip 
+index <- rep(0:(reps - 1), each = collect) * (skip + collect) + (1 : collect) + skip
 df <- df[index, ] #collect the blocks of OD data
+df
 ```
 
 ## Add timepoint and dillution columns
@@ -122,7 +130,7 @@ generateTidy <- function(df_t, selector){
 df_tidy_s1 <- generateTidy(df, group1)
 df_tidy_s2 <- generateTidy(df, group2)
 df_tidy_s3 <- generateTidy(df, group3)
-
+#View(df_tidy_s1)
 ```
 
 ## Summary Data
@@ -133,6 +141,7 @@ vars <- c("dilution", "timepoint")
 stat.sample1 <- summarySE(df_tidy_s1, measurevar="OD_N", groupvars=vars)
 stat.sample2 <- summarySE(df_tidy_s2, measurevar="OD_N", groupvars=vars)
 stat.sample3 <- summarySE(df_tidy_s3, measurevar="OD_N", groupvars=vars)
+#View(stat.sample3)
 ```
 
 ## Set-up plots
@@ -253,32 +262,124 @@ generatePlotEachLine(df_tidy_s3, title.string.s3)
 ### Growthcurver
 
 
-#### data transformat
-ion
-```{r}
-#filter(stat.sample1, dilution == "0.03") # check
-d <-  stat.sample1[, c(1, 2, 4)] %>% spread(key = "dilution", value = "OD_N")
-colnames(d)[1] <- "time"
-d$time <- d$time / 60
-d
-```
+#### data transformat for growthcurver
 
 ```{r}
 library(growthcurver)
-gc_fit <- SummarizeGrowth(d$time, d$`0`, bg_correct = "none")
-gc_fit
+# First spread the tidy data as growthcurver uses a plate setup:
+spread_data <- function(df){
+  gc_df <-  df[, c(1, 2, 4)] %>% spread(key = "dilution", value = "OD_N")
+  colnames(gc_df)[1] <- "time"
+  gc_df$time <- gc_df$time / 60
+  return(gc_df)
+}
+
+gc_df_s1 <- spread_data(stat.sample1) #growth curver data frame sample 1
+gc_df_s2 <- spread_data(stat.sample2) #growth curver data frame sample 2
+gc_df_s3 <- spread_data(stat.sample3) #growth curver data frame sample 3
+
 ```
 
+#### Single selection
+
+```{r}
+column_selector <- 2 # select a dilution. 1 is time and not a dilution!
+gc_fit <- SummarizeGrowth(gc_df_s1$time, gc_df_s1[[column_selector]], bg_correct = "none")
+gc_fit
+```
+# plot single curve
 
 ```{r}
 
-plot(gc_fit, ylab = "OD", xlab = "time (hours)", main = "concentration = 0")
+plot(gc_fit, ylab = "OD", xlab = "time (hours)", main = paste("Concentration:", colnames(gc_df_s1)[column_selector], sep = " "))
+
 ```
+# Properties of the gcfit object returned from the SummarizeGrowth function:
+
 The gcfit object returned from SummarizeGrowth also contains further metrics 
 summarizing the growth curve data.
-
+Explanation on object:
+- k:     The carrying capacity parameter
+- k_se:  The standard error of the carrying capacity parameter
+- k_p:   The p value of the carrying capacity parameter
+- n0:    The initial population size
+- n0_se: The standard error of the initial population size
+- n0_p:  The p value of the initial population size
+- r:     The growth rate
+- r_se:  The standard error of the growth rate
+- r_p:   The p value of the growthrate
+- sigma: Residual standard error from non-linear least squares fit of the model to the data
+- df:    Degrees of freedom
+- t_mid: The time at the inflection point of the logistic curve (occurs at half of the carrying capacity)
+- dt:    The maximum doubling time, obtained by evaluating the the unrestrained growth of the population with growth rate r
+- auc_l: The area under the curve of the fitted logistic equation from time 0 to time t
+- auc_e: The area under the curve of the measurements.
+- note: Feedback on common problems with fitting the logistic curve to the data
 
 ```{r}
 str(gc_fit$vals)
 ```
 
+#### Get them all
+
+
+##### Sample 1
+
+
+```{r}
+gc_out_s1 <- SummarizeGrowthByPlate(gc_df_s1, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s1.pdf", bg_correct = "none")
+gc_out_s1
+#View(gc_out_s1)
+```
+
+##### Sample 2
+
+
+```{r}
+gc_out_s2 <- SummarizeGrowthByPlate(gc_df_s2, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s2.pdf", bg_correct = "none")
+gc_out_s2
+#View(gc_out_s2)
+```
+
+#### Sample 3
+
+```{r}
+gc_out_s3 <- SummarizeGrowthByPlate(gc_df_s3, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s3.pdf", bg_correct = "none")
+gc_out_s3
+#View(gc_out_s3)
+```
+
+
+
+#### Sample 1 without bg_correct argument specified (defaults to "min"):
+
+```{r}
+gc_out_s1_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s1, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s1_gb_correct_not_specified.pdf")
+gc_out_s1_gb_correct_ns
+
+```
+
+
+#### Sample 2 without bg_correct argument specified (defaults to "min"):
+
+```{r}
+gc_out_s2_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s2, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s2_gb_correct_not_specified.pdf")
+gc_out_s2_gb_correct_ns
+
+```
+
+#### Sample 3 without bg_correct argument specified (defaults to "min"):
+
+```{r}
+gc_out_s3_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s3, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_s3_gb_correct_not_specified.pdf")
+gc_out_s3_gb_correct_ns
+
+```
+
+The end...
