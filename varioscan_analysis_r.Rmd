@@ -249,3 +249,36 @@ generatePlotEachLine(df_tidy_s2, title.string.s2)
 generatePlotEachLine(df_tidy_s3, title.string.s3)
 
 ```
+
+### Growthcurver
+
+
+#### data transformat
+ion
+```{r}
+#filter(stat.sample1, dilution == "0.03") # check
+d <-  stat.sample1[, c(1, 2, 4)] %>% spread(key = "dilution", value = "OD_N")
+colnames(d)[1] <- "time"
+d$time <- d$time / 60
+d
+```
+
+```{r}
+library(growthcurver)
+gc_fit <- SummarizeGrowth(d$time, d$`0`, bg_correct = "none")
+gc_fit
+```
+
+
+```{r}
+
+plot(gc_fit, ylab = "OD", xlab = "time (hours)", main = "concentration = 0")
+```
+The gcfit object returned from SummarizeGrowth also contains further metrics 
+summarizing the growth curve data.
+
+
+```{r}
+str(gc_fit$vals)
+```
+
