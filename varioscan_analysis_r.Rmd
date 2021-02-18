@@ -2,7 +2,7 @@
 title: "varioscan analysis"
 author: "Jurre Hageman"
 date: '2020-02-21'
-version: '2021-02-17'
+version: '2021-02-18'
 output:
   html_document: default
   word_document: default
@@ -63,7 +63,7 @@ linecolors <- c("#FF3633", "#FF8933", "#FCFF33", "#62FF33", "#33FFEB", "#33A7FF"
 
 # Imports
 
-```{r message=FALSE, warning=False}
+```{r}
 library(Rmisc)
 library(tidyverse)
 ```
@@ -85,7 +85,7 @@ group3 <- c('3_1', '3_2', '3_3', '3_c')
 
 ## Read from Excel in `xlsx` format
 
-```{r message=FALSE, warning=False}
+```{r}
 library("readxl")
 df <- read_excel(filepath_excel, sheet = 2) %>% slice(-1:-1) #drop the first row 
 
@@ -102,7 +102,7 @@ df
 
 ## Read from a `csv` file.
 
-```{r message=FALSE, warning=False}
+```{r}
 # df <- read_csv2(filepath,
 #                 col_types = cols(row = 'c', .default = col_double()),
 #                 col_names = columns) %>% #Using col_names also removes the empty columns
@@ -301,7 +301,7 @@ gc_df_s3 <- spread_data(stat.sample3, value_to_spread = "OD_N") #growth curver d
 gc_df_s1[2:9] <- replace(gc_df_s1[2:9], gc_df_s1[2:9] < 0, 0)
 gc_df_s2[2:9] <- replace(gc_df_s2[2:9], gc_df_s2[2:9] < 0, 0)
 gc_df_s3[2:9] <- replace(gc_df_s3[2:9], gc_df_s3[2:9] < 0, 0)
-gc_df_s3
+tail(gc_df_s3)
 ```
 
 ## Single selection
@@ -393,7 +393,7 @@ gc_df_no_corr_s3 <- spread_data(sample3_no_corr, value_to_spread = "OD_S")
 
 ```
 
-## Sample 1 (no correction)
+### Sample 1 (no correction)
 
 ```{r}
 gc_out_no_corr_s1 <- SummarizeGrowthByPlate(gc_df_no_corr_s1, plot_fit = TRUE, 
@@ -401,7 +401,7 @@ gc_out_no_corr_s1 <- SummarizeGrowthByPlate(gc_df_no_corr_s1, plot_fit = TRUE,
 gc_out_no_corr_s1
 ```
 
-## Sample 2 (no correction)
+### Sample 2 (no correction)
 
 ```{r}
 gc_out_no_corr_s2 <- SummarizeGrowthByPlate(gc_df_no_corr_s2, plot_fit = TRUE, 
@@ -409,12 +409,13 @@ gc_out_no_corr_s2 <- SummarizeGrowthByPlate(gc_df_no_corr_s2, plot_fit = TRUE,
 gc_out_no_corr_s2
 ```
 
-## Sample 3 (no correction)
+### Sample 3 (no correction)
 
 ```{r}
 gc_out_no_corr_s3 <- SummarizeGrowthByPlate(gc_df_no_corr_s3, plot_fit = TRUE, 
                                  plot_file = "./plots/gc_plots_no_corr_s3.pdf", bg_correct = "none")
 gc_out_no_corr_s3
 ```
+
 
 The end...
