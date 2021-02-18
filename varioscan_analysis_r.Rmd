@@ -8,13 +8,13 @@ output:
   word_document: default
 ---
 
-## Deafault plate setup
+# Deafault plate setup
 
 A default plate setup is as ahown below:
 
 ![Plate Setup](./pics/plate_setup.png)
 
-## User Settings
+# User Settings
 
 ```{r}
 # Set organism
@@ -22,6 +22,7 @@ organism <- "My Organism"
 
 # Set file and folder
 filename <- "2020-01-30.csv"
+excel_file <- "2020-01-30.xlsx"
 folder <- "sample_data"
 
 # Set samples
@@ -60,44 +61,63 @@ linecolors <- c("#FF3633", "#FF8933", "#FCFF33", "#62FF33", "#33FFEB", "#33A7FF"
 
 ```
 
-## Imports
+# Imports
 
-```{r}
-#knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
+```{r message=FALSE, warning=False}
 library(Rmisc)
+library(tidyverse)
 ```
 
-## Converting user input
+# Converting user input
 
 ```{r}
 samples <- c(sample_1, sample_2, sample_3)
 columns <- c("row", col_1, col_2, col_3, col_4, col_5, col_6, col_7, col_8, col_9, col_10, col_11, col_12)
 dilution_series <- factor(c(row_1, row_2, row_3, row_4, row_5, row_6, row_7, row_8))
 filepath <- file.path(folder, filename)
+filepath_excel <- file.path(folder, excel_file)
 group1 <- c('1_1', '1_2', '1_3', '1_c')
 group2 <- c('2_1', '2_2', '2_3', '2_c')
 group3 <- c('3_1', '3_2', '3_3', '3_c')
 ```
 
-## Loading the data
+# Loading the data
 
+## Read from Excel in `xlsx` format
 
 ```{r message=FALSE, warning=False}
-df <- read_csv2(filepath,
-                col_types = cols(row = 'c', .default = col_double()),
-                col_names = columns) %>% #Using col_names also removes the empty columns
-  slice(-1:-2) #drop the first two rows
+library("readxl")
+df <- read_excel(filepath_excel, sheet = 2) %>% slice(-1:-1) #drop the first row 
 
 skip <- 14 #each time, 14 rows of plate info that will be skipped
 collect <- 8 #there are 8 rows of OD data that I will keep
 reps <- nrow(df) %/% (skip + collect) #number of repetitions
 index <- rep(0:(reps - 1), each = collect) * (skip + collect) + (1 : collect) + skip
 df <- df[index, ] #collect the blocks of OD data
+df <- df[, 1:13]
+colnames(df) <- columns
+df[2:13] <- lapply(df[2:13], function(x) as.numeric(as.character(x)))
 df
 ```
 
-## Add timepoint and dillution columns
+## Read from a `csv` file.
+
+```{r message=FALSE, warning=False}
+# df <- read_csv2(filepath,
+#                 col_types = cols(row = 'c', .default = col_double()),
+#                 col_names = columns) %>% #Using col_names also removes the empty columns
+#   slice(-1:-2) #drop the first two rows
+# 
+# skip <- 14 #each time, 14 rows of plate info that will be skipped
+# collect <- 8 #there are 8 rows of OD data that I will keep
+# reps <- nrow(df) %/% (skip + collect) #number of repetitions
+# index <- rep(0:(reps - 1), each = collect) * (skip + collect) + (1 : collect) + skip
+# df <- df[index, ] #collect the blocks of OD data
+# df
+```
+
+
+# Add timepoint and dillution columns
 
 ```{r}
 num_of_timepoints <- nrow(df) / 8 - 1
@@ -110,7 +130,7 @@ df <- mutate(df, timepoint = timepoints, dilution = dilutions) %>%
 #View(df)
 ```
 
-## Make tidy
+# Make tidy
 
 ```{r}
 #Use dplyr to make tidy df tables
@@ -126,14 +146,13 @@ generateTidy <- function(df_t, selector){
   return(df_t)
 }
 
-
 df_tidy_s1 <- generateTidy(df, group1)
 df_tidy_s2 <- generateTidy(df, group2)
 df_tidy_s3 <- generateTidy(df, group3)
 #View(df_tidy_s1)
 ```
 
-## Summary Data
+# Summary Data
 
 ```{r}
 #Use the summarySE package to calculate the mean, SD, SE and CI data at once.
@@ -144,7 +163,7 @@ stat.sample3 <- summarySE(df_tidy_s3, measurevar="OD_N", groupvars=vars)
 #View(stat.sample3)
 ```
 
-## Set-up plots
+# Set-up plots
 
 ```{r, echo=F}
 
@@ -165,27 +184,27 @@ generatePlot <- function(sample, title.string){
 
 ```
 
-## Generate Plots
+# Generate Plots
 
-### Plot 1
+## Plot 1
 
 ```{r, echo=F}
 generatePlot(stat.sample1, title.string.s1)
 ```
 
-### Plot 2
+## Plot 2
 
 ```{r, echo=F}
 generatePlot(stat.sample2, title.string.s2)
 ```
 
-### Plot 3
+## Plot 3
 
 ```{r, echo=F}
 generatePlot(stat.sample3, title.string.s3)
 ```
 
-## Controls
+# Controls (can be used to find a contamination)
 
 ```{r}
 generatePlotControl <- function(sample, title.string){
@@ -199,7 +218,7 @@ generatePlotControl <- function(sample, title.string){
 }
 ```
 
-### Plot 1
+## Plot 1
 
 ```{r, echo=F}
 
@@ -207,7 +226,7 @@ generatePlotControl(df_tidy_s1, title.string.s1)
 
 ```
 
-### Plot 2
+## Plot 2
 
 ```{r, echo=F}
 
@@ -215,7 +234,7 @@ generatePlotControl(df_tidy_s2, title.string.s2)
 
 ```
 
-### Plot 3
+## Plot 3
 
 ```{r, echo=F}
 
@@ -223,7 +242,7 @@ generatePlotControl(df_tidy_s3, title.string.s3)
 
 ```
 
-## Losse samples
+# Each data series separate (can be used to find a contamination)
 
 ```{r}
 generatePlotEachLine <- function(sample, title.string){
@@ -235,7 +254,7 @@ generatePlotEachLine <- function(sample, title.string){
 }
 ```
 
-### Plot 1
+## Plot 1
 
 ```{r, echo=F}
 
@@ -243,7 +262,7 @@ generatePlotEachLine(df_tidy_s1, title.string.s1)
 
 ```
 
-### Plot 2
+## Plot 2
 
 ```{r, echo=F}
 
@@ -251,7 +270,7 @@ generatePlotEachLine(df_tidy_s2, title.string.s2)
 
 ```
 
-### Plot3
+## Plot3
 
 ```{r, echo=F}
 
@@ -259,42 +278,47 @@ generatePlotEachLine(df_tidy_s3, title.string.s3)
 
 ```
 
-### Growthcurver
+# Growthcurver
 
 
-#### data transformat for growthcurver
+## data transformat for growthcurver
 
 ```{r}
 library(growthcurver)
 # First spread the tidy data as growthcurver uses a plate setup:
-spread_data <- function(df){
-  gc_df <-  df[, c(1, 2, 4)] %>% spread(key = "dilution", value = "OD_N")
+spread_data <- function(df, value_to_spread){
+  gc_df <-  df[, c(1, 2, 4)] %>% spread(key = "dilution", value = value_to_spread)
   colnames(gc_df)[1] <- "time"
   gc_df$time <- gc_df$time / 60
   return(gc_df)
 }
 
-gc_df_s1 <- spread_data(stat.sample1) #growth curver data frame sample 1
-gc_df_s2 <- spread_data(stat.sample2) #growth curver data frame sample 2
-gc_df_s3 <- spread_data(stat.sample3) #growth curver data frame sample 3
+gc_df_s1 <- spread_data(stat.sample1, value_to_spread = "OD_N") #growth curver data frame sample 1
+gc_df_s2 <- spread_data(stat.sample2, value_to_spread = "OD_N") #growth curver data frame sample 2
+gc_df_s3 <- spread_data(stat.sample3, value_to_spread = "OD_N") #growth curver data frame sample 3
 
+# Replace negative values with zeros. This is done because of modeling problems  
+gc_df_s1[2:9] <- replace(gc_df_s1[2:9], gc_df_s1[2:9] < 0, 0)
+gc_df_s2[2:9] <- replace(gc_df_s2[2:9], gc_df_s2[2:9] < 0, 0)
+gc_df_s3[2:9] <- replace(gc_df_s3[2:9], gc_df_s3[2:9] < 0, 0)
+gc_df_s3
 ```
 
-#### Single selection
+## Single selection
 
 ```{r}
 column_selector <- 2 # select a dilution. 1 is time and not a dilution!
 gc_fit <- SummarizeGrowth(gc_df_s1$time, gc_df_s1[[column_selector]], bg_correct = "none")
 gc_fit
 ```
-# plot single curve
+## Plot single curve
 
 ```{r}
 
 plot(gc_fit, ylab = "OD", xlab = "time (hours)", main = paste("Concentration:", colnames(gc_df_s1)[column_selector], sep = " "))
 
 ```
-# Properties of the gcfit object returned from the SummarizeGrowth function:
+## Properties of the gcfit object returned from the SummarizeGrowth function:
 
 The gcfit object returned from SummarizeGrowth also contains further metrics 
 summarizing the growth curve data.
@@ -317,13 +341,14 @@ Explanation on object:
 - note: Feedback on common problems with fitting the logistic curve to the data
 
 ```{r}
+paste("Concentration:", colnames(gc_df_s1)[column_selector], sep = " ")
 str(gc_fit$vals)
 ```
 
-#### Get them all
+## Get them all
 
 
-##### Sample 1
+#### Sample 1
 
 
 ```{r}
@@ -333,7 +358,7 @@ gc_out_s1
 #View(gc_out_s1)
 ```
 
-##### Sample 2
+### Sample 2
 
 
 ```{r}
@@ -343,7 +368,7 @@ gc_out_s2
 #View(gc_out_s2)
 ```
 
-#### Sample 3
+### Sample 3
 
 ```{r}
 gc_out_s3 <- SummarizeGrowthByPlate(gc_df_s3, plot_fit = TRUE, 
@@ -352,34 +377,44 @@ gc_out_s3
 #View(gc_out_s3)
 ```
 
-
-
-#### Sample 1 without bg_correct argument specified (defaults to "min"):
+## Without backgroud correction
 
 ```{r}
-gc_out_s1_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s1, plot_fit = TRUE, 
-                                 plot_file = "./plots/gc_plots_s1_gb_correct_not_specified.pdf")
-gc_out_s1_gb_correct_ns
+vars <- c("dilution", "timepoint")
+sample1_no_corr <- summarySE(df_tidy_s1, measurevar="OD_S", groupvars=vars)
+sample2_no_corr <- summarySE(df_tidy_s2, measurevar="OD_S", groupvars=vars)
+sample3_no_corr <- summarySE(df_tidy_s3, measurevar="OD_S", groupvars=vars)
+
+
+gc_df_no_corr_s1 <- spread_data(sample1_no_corr, value_to_spread = "OD_S") 
+gc_df_no_corr_s2 <- spread_data(sample2_no_corr, value_to_spread = "OD_S") 
+gc_df_no_corr_s3 <- spread_data(sample3_no_corr, value_to_spread = "OD_S") 
+#gc_df_no_corr_s1
 
 ```
 
-
-#### Sample 2 without bg_correct argument specified (defaults to "min"):
+## Sample 1 (no correction)
 
 ```{r}
-gc_out_s2_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s2, plot_fit = TRUE, 
-                                 plot_file = "./plots/gc_plots_s2_gb_correct_not_specified.pdf")
-gc_out_s2_gb_correct_ns
-
+gc_out_no_corr_s1 <- SummarizeGrowthByPlate(gc_df_no_corr_s1, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_no_corr_s1.pdf", bg_correct = "none")
+gc_out_no_corr_s1
 ```
 
-#### Sample 3 without bg_correct argument specified (defaults to "min"):
+## Sample 2 (no correction)
 
 ```{r}
-gc_out_s3_gb_correct_ns <- SummarizeGrowthByPlate(gc_df_s3, plot_fit = TRUE, 
-                                 plot_file = "./plots/gc_plots_s3_gb_correct_not_specified.pdf")
-gc_out_s3_gb_correct_ns
+gc_out_no_corr_s2 <- SummarizeGrowthByPlate(gc_df_no_corr_s2, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_no_corr_s2.pdf", bg_correct = "none")
+gc_out_no_corr_s2
+```
 
+## Sample 3 (no correction)
+
+```{r}
+gc_out_no_corr_s3 <- SummarizeGrowthByPlate(gc_df_no_corr_s3, plot_fit = TRUE, 
+                                 plot_file = "./plots/gc_plots_no_corr_s3.pdf", bg_correct = "none")
+gc_out_no_corr_s3
 ```
 
 The end...
