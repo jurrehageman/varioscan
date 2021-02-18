@@ -280,6 +280,8 @@ generatePlotEachLine(df_tidy_s3, title.string.s3)
 
 # Growthcurver
 
+See this link: [growthcurver](https://cran.r-project.org/web/packages/growthcurver/vignettes/Growthcurver-vignette.html)
+On Github: [Growthcurver](https://github.com/cran/growthcurver)
 
 ## data transformat for growthcurver
 
@@ -416,6 +418,34 @@ gc_out_no_corr_s3 <- SummarizeGrowthByPlate(gc_df_no_corr_s3, plot_fit = TRUE,
                                  plot_file = "./plots/gc_plots_no_corr_s3.pdf", bg_correct = "none")
 gc_out_no_corr_s3
 ```
+
+
+# Growthcurve package 
+
+See this link: [growthcurve](https://github.com/briandconnelly/growthcurve)
+NB: Do not confuse with the `growthcurver` package
+
+```{r}
+library(growthcurve)
+```
+
+```{r}
+rep1 <- filter(df_tidy_s1, sample == 1, dilution == 0, replicate == 1)
+myfit <- fit_growth(rep1, timepoint, OD_N, model = "gompertz")
+plot(myfit, show_raw = TRUE, show_maxrate = TRUE, show_asymptote = FALSE, ylab = "OD (AU)", xlab = "Time (min)")
+```
+
+
+```{r}
+test2 <- filter(df_tidy_s1, sample == 1, dilution == 0)
+ggplot(data = test2, aes(x = timepoint, y = OD_N, color = replicate)) +
+    geom_point(shape = 1) +
+    ylab("OD (AU)") +
+    xlab("Time (min)") +
+    stat_growthcurve()
+```
+
+
 
 
 The end...
