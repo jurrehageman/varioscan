@@ -1,0 +1,75 @@
+---
+title: "growthcurver_test"
+output: html_document
+---
+
+```{r}
+library("growthcurver")
+
+sample_data <- growthdata
+sample_data
+#dim(sample_data) # 145 rows and 97 columns (thus 96 samples as first column is time)
+```
+# Single sample (A1)
+
+```{r}
+gc_fit <- SummarizeGrowth(sample_data$time, sample_data$A1)
+gc_fit
+```
+
+```{r}
+plot(gc_fit)
+```
+
+```{r}
+gc_fit$vals
+```
+```{r}
+str(gc_fit$vals)
+```
+
+# Now whole plate at once: default background correction.
+
+
+```{r}
+#?SummarizeGrowthByPlate
+gc_out_min <- SummarizeGrowthByPlate(sample_data, bg_correct = "min", plot_fit = TRUE, 
+              plot_file = "./growthcurver_test_plots/gc_test_plot_default_correction.pdf")
+head(gc_out_min)
+```
+
+# Now whole plate at once: no background correction.
+
+```{r}
+gc_out_no_corr <- SummarizeGrowthByPlate(sample_data, bg_correct = "none", plot_fit = TRUE, 
+                  plot_file = "./growthcurver_test_plots/gc_test_plot_no_correction.pdf")
+head(gc_out_no_corr)
+```
+
+# Do the correction myself
+
+```{r}
+sub_smallest <- function(data){
+  min_val <- min(data)
+  data <- data - min_val
+  return(data)
+}
+
+sample_data_corr <- data.frame(apply(growthdata, 2, sub_smallest))
+head(sample_data_corr)
+
+```
+
+```{r}
+gc_out_custom_corr <- SummarizeGrowthByPlate(sample_data_corr, bg_correct = "none", plot_fit = TRUE, 
+                  plot_file = "./growthcurver_test_plots/gc_test_plot_custom_correction.pdf")
+head(gc_out_custom_corr)
+table(gc_out_min == gc_out_custom_corr, useNA = 'ifany')
+```
+
+
+The end...
+
+---
+
+
