@@ -299,7 +299,7 @@ gc_df_s1 <- spread_data(stat.sample1, value_to_spread = "OD_N") #growth curver d
 gc_df_s2 <- spread_data(stat.sample2, value_to_spread = "OD_N") #growth curver data frame sample 2
 gc_df_s3 <- spread_data(stat.sample3, value_to_spread = "OD_N") #growth curver data frame sample 3
 
-# Replace negative values with zeros. This is done because of modeling problems  
+# Replace negative values with zeros. This is done because of modeling problems  # IS THIS OK??
 gc_df_s1[2:9] <- replace(gc_df_s1[2:9], gc_df_s1[2:9] < 0, 0)
 gc_df_s2[2:9] <- replace(gc_df_s2[2:9], gc_df_s2[2:9] < 0, 0)
 gc_df_s3[2:9] <- replace(gc_df_s3[2:9], gc_df_s3[2:9] < 0, 0)
@@ -403,6 +403,14 @@ gc_out_no_corr_s1 <- SummarizeGrowthByPlate(gc_df_no_corr_s1, plot_fit = TRUE,
 gc_out_no_corr_s1
 ```
 
+
+Plot the r:
+
+```{r}
+barplot(gc_out_no_corr_s1$r, main = "Sample 1", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s1$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
+```
+
+
 ### Sample 2 (no correction)
 
 ```{r}
@@ -411,6 +419,11 @@ gc_out_no_corr_s2 <- SummarizeGrowthByPlate(gc_df_no_corr_s2, plot_fit = TRUE,
 gc_out_no_corr_s2
 ```
 
+```{r}
+barplot(gc_out_no_corr_s2$r, main = "Sample 2", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s2$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
+```
+
+
 ### Sample 3 (no correction)
 
 ```{r}
@@ -418,7 +431,9 @@ gc_out_no_corr_s3 <- SummarizeGrowthByPlate(gc_df_no_corr_s3, plot_fit = TRUE,
                                  plot_file = "./plots/gc_plots_no_corr_s3.pdf", bg_correct = "none")
 gc_out_no_corr_s3
 ```
-
+```{r}
+barplot(gc_out_no_corr_s3$r, main = "Elution", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s3$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
+```
 
 # Growthcurve package 
 
