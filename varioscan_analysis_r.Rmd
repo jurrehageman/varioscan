@@ -409,7 +409,11 @@ Plot the r:
 ```{r}
 barplot(gc_out_no_corr_s1$r, main = "Sample 1", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s1$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
 ```
+Plot the generation time
 
+```{r}
+barplot(gc_out_no_corr_s1$t_gen, main = "Sample 1", col = "blue", names = gc_out_no_corr_s1$sample, xlab = "concentration (%)", ylab = "generation time (hours)")
+```
 
 ### Sample 2 (no correction)
 
@@ -419,10 +423,17 @@ gc_out_no_corr_s2 <- SummarizeGrowthByPlate(gc_df_no_corr_s2, plot_fit = TRUE,
 gc_out_no_corr_s2
 ```
 
+Plot the r:
+
 ```{r}
 barplot(gc_out_no_corr_s2$r, main = "Sample 2", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s2$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
 ```
 
+Plot the generation time
+
+```{r}
+barplot(gc_out_no_corr_s2$t_gen, main = "Sample 2", col = "blue", names = gc_out_no_corr_s2$sample, xlab = "concentration (%)", ylab = "generation time (hours)")
+```
 
 ### Sample 3 (no correction)
 
@@ -431,9 +442,19 @@ gc_out_no_corr_s3 <- SummarizeGrowthByPlate(gc_df_no_corr_s3, plot_fit = TRUE,
                                  plot_file = "./plots/gc_plots_no_corr_s3.pdf", bg_correct = "none")
 gc_out_no_corr_s3
 ```
+
+Plot the r:
+
 ```{r}
 barplot(gc_out_no_corr_s3$r, main = "Elution", col = "blue", ylim = c(0, 0.7), names = gc_out_no_corr_s3$sample, xlab = "concentration (%)", ylab = "r-value (hour^-1)")
 ```
+
+Plot the generation time
+
+```{r}
+barplot(gc_out_no_corr_s3$t_gen, main = "Elution", col = "blue", names = gc_out_no_corr_s3$sample, xlab = "concentration (%)", ylab = "generation time (hours)")
+```
+
 
 # Growthcurve package 
 
